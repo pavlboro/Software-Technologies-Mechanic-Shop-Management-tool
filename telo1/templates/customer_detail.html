@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ customer['name'] }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ customer['name'] }}</h1>
+  <div class="quick">
+    <a class="btn" href="{{ url_for('print_view', kind='customer', rid=customer['id']) }}" target="_blank">Εκτύπωση καρτέλας</a>
+    <a class="btn" href="{{ url_for('customers', edit=customer['id']) }}">Επεξεργασία</a>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Στοιχεία πελάτη</h2>
+    <dl class="specs">
+      <div><dt>ΑΦΜ</dt><dd class="mono">{{ customer['vat'] or '—' }}</dd></div>
+      <div><dt>Τηλέφωνο</dt><dd class="mono">{{ customer['phone'] or '—' }}</dd></div>
+      <div><dt>E-mail</dt><dd class="mono">{{ customer['email'] or '—' }}</dd></div>
+      <div><dt>Διεύθυνση</dt><dd>{{ customer['address'] or '—' }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h2>Οχήματα πελάτη</h2>
+    <table>
+      <thead><tr><th>Πινακίδα</th><th>Όχημα</th><th>VIN</th></tr></thead>
+      <tbody>
+        {% for v in vehicles %}
+        <tr>
+          <td><a class="mono" href="{{ url_for('vehicle_detail', vid=v['id']) }}">{{ v['plate'] }}</a></td>
+          <td>{{ v['make'] }} {{ v['model'] }}</td>
+          <td class="mono">{{ v['vin'] }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" class="muted">Δεν έχουν καταχωριστεί οχήματα.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Προσθήκη οχήματος</h3>
+    <form method="post" action="{{ url_for('vehicles_save') }}" class="form grid-form">
+      <input type="hidden" name="customer_id" value="{{ customer['id'] }}">
+      <label>Αρ. Κυκλοφορίας<input name="plate" required></label>
+      <label>VIN<input name="vin"></label>
+      <label>Μάρκα<input name="make"></label>
+      <label>Μοντέλο<input name="model"></label>
+      <label>1η Άδεια<input type="date" name="first_registration"></label>
+      <label>Καύσιμο
+        <select name="fuel">
+          {% for fuel in ['Βενζίνη', 'Πετρέλαιο', 'Υγραέριο', 'Ηλεκτρικό', 'Υβριδικό'] %}
+          <option>{{ fuel }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Κυβισμός<input name="engine_cc"></label>
+      <label>Αρ. Κινητήρα<input name="engine_no"></label>
+      <div class="form-actions"><button class="btn primary" type="submit">Αποθήκευση οχήματος</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}

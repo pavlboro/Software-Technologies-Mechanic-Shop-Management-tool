@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Πίνακας ελέγχου{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Πίνακας ελέγχου</h1>
+  <div class="quick">
+    {% if user['role'] in ['owner', 'reception'] %}
+    <a class="btn primary" href="{{ url_for('ticket_new') }}">Νέο δελτίο</a>
+    <a class="btn" href="{{ url_for('customers') }}">Νέος πελάτης</a>
+    {% endif %}
+    <a class="btn" href="{{ url_for('search') }}">Γρήγορη αναζήτηση</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span>Σημερινές είσοδοι</span><strong>{{ stats['today'] }}</strong></div>
+  <div class="stat"><span>Εκκρεμή δελτία</span><strong>{{ stats['pending'] }}</strong></div>
+  <div class="stat"><span>Έτοιμα προς παράδοση</span><strong>{{ stats['ready'] }}</strong></div>
+  <div class="stat"><span>Χαμηλό απόθεμα</span><strong>{{ stats['low_stock'] }}</strong></div>
+</div>
+
+<div class="grid-2 wide-left">
+  <section class="card">
+    <h2>Ενεργά δελτία εργασίας</h2>
+    {% for key in ['pending', 'progress', 'ready'] %}
+      <h3 class="board-title"><span class="badge {{ key }}">{{ statuses[key] }}</span>
+        <small>{{ board[key]|length }} δελτία</small></h3>
+      {% if board[key] %}
+      <table class="board">
+        <thead><tr><th>Δελτίο</th><th>Όχημα</th><th>Πελάτης</th><th>Είσοδος</th><th></th></tr></thead>
+        <tbody>
+        {% for t in board[key] %}
+          <tr>
+            <td class="mono">#{{ t['id'] }}</td>
+            <td><span class="plate small">{{ t['plate'] }}</span> {{ t['make'] }} {{ t['model'] }}</td>
+            <td>{{ t['customer_name'] }}</td>
+            <td class="mono">{{ t['opened_date'] }}</td>
+            <td class="actions">
+              <a class="link" href="{{ url_for('ticket_view', tid=t['id']) }}">Προβολή</a>
+              {% if user['role'] in ['owner', 'mechanic'] %}
+              <a class="link" href="{{ url_for('ticket_work', tid=t['id']) }}">Εργασίες</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">Κανένα δελτίο σε αυτή την κατάσταση.</p>
+      {% endif %}
+    {% endfor %}
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Γρήγορη αναζήτηση</h2>
+      <form method="get" action="{{ url_for('search') }}" class="form">
+        <label>Πινακίδα / VIN / Πελάτης
+          <input name="plate" placeholder="π.χ. ΚΟΜ-1234">
+        </label>
+        <button class="btn primary" type="submit">Αναζήτηση</button>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Χαμηλό απόθεμα</h2>
+      {% if low_stock %}
+      <ul class="plain">
+        {% for p in low_stock %}
+        <li><span class="mono">{{ p['code'] }}</span> {{ p['description'] }}
+          <strong class="warn">{{ p['stock'] }} τεμ.</strong></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted">Όλα τα ανταλλακτικά έχουν επαρκές απόθεμα.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

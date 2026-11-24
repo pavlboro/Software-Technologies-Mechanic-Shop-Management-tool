@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <title>Εκτύπωση</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="print-page">
+  <div class="print-bar">
+    <button class="btn primary" type="button" onclick="window.print()">Εκτύπωση</button>
+  </div>
+
+  <header class="print-head">
+    <div>
+      <strong class="print-brand">ΣΥΝΕΡΓΕΙΟ AUTO</strong>
+      <p>Κέντρο επισκευών αυτοκινήτων · Κομοτηνή</p>
+    </div>
+    <div class="mono">
+      {% if kind == 'ticket' %}<p>Δελτίο #{{ ticket['id'] }}</p>
+      {% elif kind == 'customer' %}<p>Καρτέλα πελάτη</p>
+      {% else %}<p>Καρτέλα οχήματος</p>{% endif %}
+      <p>{{ ticket['opened_date'] if kind == 'ticket' else '' }}</p>
+    </div>
+  </header>
+
+  {% if kind == 'ticket' %}
+  <h1>Δελτίο εργασίας #{{ ticket['id'] }}</h1>
+  <table class="kv">
+    <tr><th>Πελάτης</th><td>{{ ticket['customer_name'] }}</td>
+        <th>Πινακίδα</th><td class="mono">{{ ticket['plate'] }}</td></tr>
+    <tr><th>Όχημα</th><td>{{ ticket['make'] }} {{ ticket['model'] }}</td>
+        <th>VIN</th><td class="mono">{{ ticket['vin'] }}</td></tr>
+    <tr><th>Είσοδος</th><td class="mono">{{ ticket['opened_date'] }}</td>
+        <th>Χιλιόμετρα</th><td class="mono">{{ ticket['km_in'] }}</td></tr>
+    <tr><th>Έξοδος</th><td class="mono">{{ ticket['closed_date'] or '—' }}</td>
+        <th>Παραστατικό</th><td>{{ ticket['invoice_type'] or '—' }} {{ ticket['invoice_no'] or '' }}</td></tr>
+  </table>
+  <h2>Τι πρόβλημα είχε</h2>
+  <p>{{ ticket['description'] or '—' }}</p>
+  <h2>Διάγνωση</h2>
+  <p>{{ ticket['diagnosis'] or '—' }}</p>
+  <h2>Τι έγινε</h2>
+  <p>{{ ticket['work_done'] or '—' }}</p>
+  <h2>Ανταλλακτικά</h2>
+  <table>
+    <thead><tr><th>Κωδικός</th><th>Περιγραφή</th><th>Ποσ.</th><th>Τιμή</th><th>Σύνολο</th></tr></thead>
+    <tbody>
+      {% for p in parts_used %}
+      <tr>
+        <td class="mono">{{ p['code'] }}</td>
+        <td>{{ p['description'] }}</td>
+        <td class="mono">{{ p['qty'] }}</td>
+        <td class="mono">{{ '%.2f'|format(p['price']) }} €</td>
+        <td class="mono">{{ '%.2f'|format(p['qty'] * p['price']) }} €</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="totals">
+    <tr><td>Εργασία</td><td class="mono">{{ '%.2f'|format(totals['labor']) }} €</td></tr>
+    <tr><td>Ανταλλακτικά</td><td class="mono">{{ '%.2f'|format(totals['parts']) }} €</td></tr>
+    <tr><td>Καθαρό ποσό</td><td class="mono">{{ '%.2f'|format(totals['net']) }} €</td></tr>
+    <tr><td>ΦΠΑ 24%</td><td class="mono">{{ '%.2f'|format(totals['vat']) }} €</td></tr>
+    <tr class="grand"><td>Σύνολο</td><td class="mono">{{ '%.2f'|format(totals['total']) }} €</td></tr>
+  </table>
+
+  {% elif kind == 'customer' %}
+  <h1>Καρτέλα πελάτη</h1>
+  <table class="kv">
+    <tr><th>Ονοματεπώνυμο</th><td>{{ customer['name'] }}</td><th>ΑΦΜ</th><td class="mono">{{ customer['vat'] }}</td></tr>
+    <tr><th>Τηλέφωνο</th><td class="mono">{{ customer['phone'] }}</td><th>E-mail</th><td>{{ customer['email'] }}</td></tr>
+    <tr><th>Διεύθυνση</th><td colspan="3">{{ customer['address'] }}</td></tr>
+  </table>
+  <h2>Οχήματα</h2>
+  <table>
+    <thead><tr><th>Πινακίδα</th><th>Μάρκα / Μοντέλο</th><th>VIN</th><th>Καύσιμο</th></tr></thead>
+    <tbody>
+      {% for v in vehicles %}
+      <tr><td class="mono">{{ v['plate'] }}</td><td>{{ v['make'] }} {{ v['model'] }}</td>
+          <td class="mono">{{ v['vin'] }}</td><td>{{ v['fuel'] }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% else %}
+  <h1>Καρτέλα οχήματος</h1>
+  <table class="kv">
+    <tr><th>Πινακίδα</th><td class="mono">{{ vehicle['plate'] }}</td><th>VIN</th><td class="mono">{{ vehicle['vin'] }}</td></tr>
+    <tr><th>Όχημα</th><td>{{ vehicle['make'] }} {{ vehicle['model'] }}</td>
+        <th>Πελάτης</th><td>{{ vehicle['customer_name'] }}</td></tr>
+    <tr><th>1η Άδεια</th><td class="mono">{{ vehicle['first_registration'] }}</td>
+        <th>Καύσιμο</th><td>{{ vehicle['fuel'] }}</td></tr>
+    <tr><th>Κυβισμός</th><td class="mono">{{ vehicle['engine_cc'] }}</td>
+        <th>Αρ. Κινητήρα</th><td class="mono">{{ vehicle['engine_no'] }}</td></tr>
+  </table>
+  <h2>Ιστορικό service</h2>
+  <table>
+    <thead><tr><th>Δελτίο</th><th>Ημερομηνία</th><th>Χλμ.</th><th>Εργασίες</th></tr></thead>
+    <tbody>
+      {% for t in history %}
+      <tr><td class="mono">#{{ t['id'] }}</td><td class="mono">{{ t['opened_date'] }}</td>
+          <td class="mono">{{ t['km_in'] }}</td><td>{{ t['description'] }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <footer class="print-foot">
+    <p>Υπογραφή παραλαβής: ______________________________</p>
+  </footer>
+</body>
+</html>

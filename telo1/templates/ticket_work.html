@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Εργασίες δελτίου #{{ ticket['id'] }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Εργασίες · #{{ ticket['id'] }}</h1>
+  <div class="quick">
+    <a class="btn" href="{{ url_for('ticket_view', tid=ticket['id']) }}">Προβολή δελτίου</a>
+  </div>
+</div>
+
+<section class="card vehicle-banner">
+  <div>
+    <span class="plate">{{ ticket['plate'] }}</span>
+    <p>{{ ticket['make'] }} {{ ticket['model'] }} · {{ ticket['customer_name'] }}</p>
+  </div>
+  <div class="banner-meta">
+    <span class="mono">VIN {{ ticket['vin'] }}</span>
+    <span class="mono">{{ ticket['km_in'] }} km</span>
+    <span class="badge {{ ticket['status'] }}">{{ statuses[ticket['status']] }}</span>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Τι πρόβλημα έχει</h2>
+    <p>{{ ticket['description'] or '—' }}</p>
+
+    <h3>Έτοιμες εργασίες</h3>
+    <form method="post" class="form inline">
+      <select name="template_id">
+        {% for tpl in templates_list %}
+        <option value="{{ tpl['id'] }}">{{ tpl['name'] }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit" name="action" value="template">Προσθήκη εργασιών</button>
+    </form>
+
+    <form method="post" class="form" enctype="multipart/form-data">
+      <label>Διάγνωση<textarea name="diagnosis" rows="3">{{ ticket['diagnosis'] or '' }}</textarea></label>
+      <label>Τι έκανα<textarea name="work_done" rows="5">{{ ticket['work_done'] or '' }}</textarea></label>
+      <label>Ώρες εργασίας<input type="number" step="0.25" name="labor_hours" value="{{ ticket['labor_hours'] or 0 }}"></label>
+      <label>Φωτογραφίες βλαβών<input type="file" name="photos" accept="image/png,image/jpeg" multiple></label>
+      <label>Σημειώσεις<textarea name="notes" rows="3">{{ ticket['notes'] or '' }}</textarea></label>
+      <button class="btn primary big" type="submit" name="action" value="save">Αποθήκευση εργασιών</button>
+    </form>
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Πού βρίσκεται το όχημα</h2>
+      <form method="post" class="form inline">
+        <button class="btn" type="submit" name="status" value="pending">Εκκρεμεί</button>
+        <button class="btn" type="submit" name="status" value="progress">Σε εξέλιξη</button>
+        <button class="btn" type="submit" name="status" value="ready">Έτοιμο προς παράδοση</button>
+        <input type="hidden" name="action" value="status">
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Ανταλλακτικά δελτίου</h2>
+      <table>
+        <thead><tr><th>Κωδικός</th><th>Περιγραφή</th><th>Ποσ.</th><th></th></tr></thead>
+        <tbody>
+          {% for p in parts_used %}
+          <tr>
+            <td class="mono">{{ p['code'] }}</td>
+            <td>{{ p['description'] }}</td>
+            <td class="mono">{{ p['qty'] }}</td>
+            <td>
+              <form method="post">
+                <input type="hidden" name="action" value="remove_part">
+                <input type="hidden" name="part_row" value="{{ p['id'] }}">
+                <button class="link" type="submit">Αφαίρεση</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="muted">Κανένα ανταλλακτικό ακόμη.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h3>Προσθήκη από τον κατάλογο</h3>
+      <form method="post" class="form inline">
+        <select name="part_id">
+          {% for p in catalog %}
+          <option value="{{ p['id'] }}">{{ p['code'] }} · {{ p['description'] }} · {{ '%.2f'|format(p['price']) }} €</option>
+          {% endfor %}
+        </select>
+        <input type="number" name="qty" value="1" min="1" step="1" class="short">
+        <button class="btn" type="submit" name="action" value="part">Προσθήκη</button>
+      </form>
+    </section>
+
+    {% if photos %}
+    <section class="card">
+      <h2>Φωτογραφίες</h2>
+      <div class="photos">
+        {% for photo in photos %}
+        <img src="{{ url_for('static', filename='uploads/' + photo['filename']) }}" alt="Φωτογραφία δελτίου">
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Νέο δελτίο εργασίας{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Άνοιγμα δελτίου εργασίας</h1>
+</div>
+
+<section class="card narrow">
+  <form method="post" class="form" enctype="multipart/form-data">
+    <label>Όχημα
+      <select name="vehicle_id" required>
+        <option value="">— Επιλέξτε όχημα —</option>
+        {% for v in vehicles %}
+        <option value="{{ v['id'] }}" {{ 'selected' if vehicle_id == v['id'] }}>
+          {{ v['plate'] }} · {{ v['make'] }} {{ v['model'] }} · {{ v['customer_name'] }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Ημερομηνία εισόδου<input type="date" name="opened_date" value="{{ today }}" required></label>
+    <label>Χιλιόμετρα εισόδου<input type="number" name="km_in" min="0" required></label>
+    <label>Αιτιολόγηση (υποχρεωτική αν τα χιλιόμετρα είναι λιγότερα από την προηγούμενη ένδειξη)
+      <input name="km_reason" placeholder="π.χ. αντικατάσταση πίνακα οργάνων">
+    </label>
+    <label>Τι πρόβλημα έχει το όχημα;
+      <textarea name="description" rows="4" required></textarea>
+    </label>
+    <label>Φωτογραφίες παραλαβής (jpg, png έως 10MB)
+      <input type="file" name="photos" accept="image/png,image/jpeg" multiple>
+    </label>
+    <button class="btn primary big" type="submit">Άνοιγμα δελτίου</button>
+  </form>
+</section>
+{% endblock %}

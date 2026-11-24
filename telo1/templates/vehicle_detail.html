@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ vehicle['plate'] }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Καρτέλα οχήματος <span class="plate">{{ vehicle['plate'] }}</span></h1>
+  <div class="quick">
+    <a class="btn" href="{{ url_for('print_view', kind='vehicle', rid=vehicle['id']) }}" target="_blank">Εκτύπωση</a>
+    {% if user['role'] in ['owner', 'reception'] %}
+    <a class="btn primary" href="{{ url_for('ticket_new', vehicle_id=vehicle['id']) }}">Νέο δελτίο</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Τεχνικά στοιχεία</h2>
+    <dl class="specs">
+      <div><dt>Πελάτης</dt><dd>{{ vehicle['customer_name'] }}</dd></div>
+      <div><dt>VIN</dt><dd class="mono">{{ vehicle['vin'] or '—' }}</dd></div>
+      <div><dt>Μάρκα / Μοντέλο</dt><dd>{{ vehicle['make'] }} {{ vehicle['model'] }}</dd></div>
+      <div><dt>1η Άδεια</dt><dd class="mono">{{ vehicle['first_registration'] or '—' }}</dd></div>
+      <div><dt>Καύσιμο</dt><dd>{{ vehicle['fuel'] or '—' }}</dd></div>
+      <div><dt>Κυβισμός</dt><dd class="mono">{{ vehicle['engine_cc'] or '—' }}</dd></div>
+      <div><dt>Αρ. Κινητήρα</dt><dd class="mono">{{ vehicle['engine_no'] or '—' }}</dd></div>
+      <div><dt>Τρέχουσα ένδειξη</dt><dd class="mono">{{ last_km }} km</dd></div>
+    </dl>
+
+    {% if user['role'] in ['owner', 'reception'] %}
+    <h3>Επεξεργασία βασικών στοιχείων</h3>
+    <form method="post" action="{{ url_for('vehicles_save') }}" class="form grid-form">
+      <input type="hidden" name="vehicle_id" value="{{ vehicle['id'] }}">
+      <input type="hidden" name="customer_id" value="{{ vehicle['customer_id'] }}">
+      <label>Αρ. Κυκλοφορίας<input name="plate" value="{{ vehicle['plate'] }}" required></label>
+      <label>VIN<input name="vin" value="{{ vehicle['vin'] or '' }}"></label>
+      <label>Μάρκα<input name="make" value="{{ vehicle['make'] or '' }}"></label>
+      <label>Μοντέλο<input name="model" value="{{ vehicle['model'] or '' }}"></label>
+      <label>1η Άδεια<input type="date" name="first_registration" value="{{ vehicle['first_registration'] or '' }}"></label>
+      <label>Καύσιμο
+        <select name="fuel">
+          {% for fuel in fuels %}
+          <option {{ 'selected' if vehicle['fuel'] == fuel }}>{{ fuel }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Κυβισμός<input name="engine_cc" value="{{ vehicle['engine_cc'] or '' }}"></label>
+      <label>Αρ. Κινητήρα<input name="engine_no" value="{{ vehicle['engine_no'] or '' }}"></label>
+      <div class="form-actions"><button class="btn primary" type="submit">Αποθήκευση</button></div>
+    </form>
+    {% endif %}
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Χιλιόμετρα με την πάροδο του χρόνου</h2>
+      {% if mileage %}
+      <table class="mileage">
+        <thead><tr><th>Ημερομηνία</th><th>Χιλιόμετρα</th><th>Διαφορά</th></tr></thead>
+        <tbody>
+          {% for m in mileage %}
+          <tr>
+            <td class="mono">{{ m['opened_date'] }}</td>
+            <td class="mono">{{ m['km_in'] }} km</td>
+            <td class="mono">
+              {% if not loop.first %}+{{ m['km_in'] - mileage[loop.index0 - 1]['km_in'] }} km{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">Δεν υπάρχουν ακόμη καταγραφές χιλιομέτρων.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Ιστορικό service</h2>
+      <table>
+        <thead><tr><th>Δελτίο</th><th>Ημερομηνία</th><th>Χλμ.</th><th>Εργασίες</th><th>Κατάσταση</th></tr></thead>
+        <tbody>
+          {% for t in history %}
+          <tr>
+            <td class="mono"><a href="{{ url_for('ticket_view', tid=t['id']) }}">#{{ t['id'] }}</a></td>
+            <td class="mono">{{ t['opened_date'] }}</td>
+            <td class="mono">{{ t['km_in'] }}</td>
+            <td class="clamp">{{ t['description'] }}</td>
+            <td><span class="badge {{ t['status'] }}">{{ statuses[t['status']] }}</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="muted">Δεν υπάρχει ιστορικό service.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>
+{% endblock %}

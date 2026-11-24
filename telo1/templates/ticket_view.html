@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Δελτίο #{{ ticket['id'] }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Δελτίο εργασίας #{{ ticket['id'] }}</h1>
+  <div class="quick">
+    <a class="btn" href="{{ url_for('print_view', kind='ticket', rid=ticket['id']) }}" target="_blank">Εκτύπωση</a>
+    {% if user['role'] in ['owner', 'mechanic'] %}
+    <a class="btn primary" href="{{ url_for('ticket_work', tid=ticket['id']) }}">Επεξεργασία εργασιών</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Στοιχεία δελτίου</h2>
+    <dl class="specs">
+      <div><dt>Πελάτης</dt><dd>{{ ticket['customer_name'] }}</dd></div>
+      <div><dt>Όχημα</dt><dd>{{ ticket['make'] }} {{ ticket['model'] }}</dd></div>
+      <div><dt>Πινακίδα</dt><dd><span class="plate">{{ ticket['plate'] }}</span></dd></div>
+      <div><dt>VIN</dt><dd class="mono">{{ ticket['vin'] }}</dd></div>
+      <div><dt>Είσοδος</dt><dd class="mono">{{ ticket['opened_date'] }}</dd></div>
+      <div><dt>Χιλιόμετρα</dt><dd class="mono">{{ ticket['km_in'] }}</dd></div>
+      <div><dt>Κατάσταση</dt><dd><span class="badge {{ ticket['status'] }}">{{ statuses[ticket['status']] }}</span></dd></div>
+      <div><dt>Μηχανικός</dt><dd>{{ ticket['mechanic_name'] or '—' }}</dd></div>
+    </dl>
+    {% if ticket['km_reason'] %}
+    <p class="note">Αιτιολόγηση χιλιομέτρων: {{ ticket['km_reason'] }}</p>
+    {% endif %}
+    <h3>Τι πρόβλημα έχει</h3>
+    <p>{{ ticket['description'] or '—' }}</p>
+    <h3>Διάγνωση</h3>
+    <p>{{ ticket['diagnosis'] or '—' }}</p>
+    <h3>Τι έγινε</h3>
+    <p>{{ ticket['work_done'] or '—' }}</p>
+    {% if photos %}
+    <h3>Φωτογραφίες</h3>
+    <div class="photos">
+      {% for photo in photos %}
+      <img src="{{ url_for('static', filename='uploads/' + photo['filename']) }}" alt="Φωτογραφία δελτίου">
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Ανταλλακτικά</h2>
+    <table>
+      <thead><tr><th>Κωδικός</th><th>Περιγραφή</th><th>Ποσ.</th><th>Τιμή</th></tr></thead>
+      <tbody>
+        {% for p in parts_used %}
+        <tr>
+          <td class="mono">{{ p['code'] }}</td>
+          <td>{{ p['description'] }}</td>
+          <td class="mono">{{ p['qty'] }}</td>
+          <td class="mono">{{ '%.2f'|format(p['price']) }} €</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">Δεν έχουν καταχωριστεί ανταλλακτικά.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if user['role'] != 'mechanic' %}
+    <h3>Κόστος</h3>
+    <table class="totals">
+      <tr><td>Εργασία ({{ ticket['labor_hours'] or 0 }} ώρες × {{ '%.2f'|format(ticket['labor_rate'] or 0) }} €)</td>
+          <td class="mono">{{ '%.2f'|format(totals['labor']) }} €</td></tr>
+      <tr><td>Ανταλλακτικά</td><td class="mono">{{ '%.2f'|format(totals['parts']) }} €</td></tr>
+      <tr><td>Καθαρό ποσό</td><td class="mono">{{ '%.2f'|format(totals['net']) }} €</td></tr>
+      <tr><td>ΦΠΑ 24%</td><td class="mono">{{ '%.2f'|format(totals['vat']) }} €</td></tr>
+      <tr class="grand"><td>Σύνολο</td><td class="mono">{{ '%.2f'|format(totals['total']) }} €</td></tr>
+    </table>
+    {% endif %}
+
+    {% if ticket['status'] != 'closed' and user['role'] in ['owner', 'reception'] %}
+    <h3>Κλείσιμο &amp; τιμολόγηση</h3>
+    <form method="post" action="{{ url_for('ticket_close', tid=ticket['id']) }}" class="form grid-form">
+      <label>Ημ/νία εξόδου<input type="date" name="closed_date" value="{{ today }}"></label>
+      <label>Τύπος παραστατικού
+        <select name="invoice_type"><option>Απόδειξη</option><option>Τιμολόγιο</option></select>
+      </label>
+      <label>Αριθμός παραστατικού<input name="invoice_no"></label>
+      <label>Ώρες εργασίας<input type="number" step="0.25" name="labor_hours" value="{{ ticket['labor_hours'] or 0 }}"></label>
+      <label>Ωριαία χρέωση (€)<input type="number" step="0.5" name="labor_rate" value="{{ ticket['labor_rate'] or 0 }}"></label>
+      <div class="form-actions">
+        <button class="btn primary" type="submit">Κλείσιμο δελτίου</button>
+      </div>
+    </form>
+    {% endif %}
+
+    {% if ticket['status'] == 'closed' %}
+    <p class="note">Κλεισμένο στις {{ ticket['closed_date'] }} · {{ ticket['invoice_type'] }}
+      {{ ticket['invoice_no'] }}{% if ticket['emailed_at'] %} · Στάλθηκε {{ ticket['emailed_at'] }}{% endif %}</p>
+    <form method="post" action="{{ url_for('ticket_email', tid=ticket['id']) }}">
+      <button class="btn" type="submit">Αποστολή με e-mail στον πελάτη</button>
+    </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

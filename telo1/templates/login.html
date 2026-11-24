@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Σύνδεση - Συνεργείο Auto{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <section class="card login-card">
+    <h1>Σύνδεση στην εφαρμογή</h1>
+    <p class="muted">Κέντρο επισκευών αυτοκινήτων - πρόσβαση προσωπικού</p>
+    <form method="post" class="form">
+      <label>Όνομα χρήστη
+        <input name="username" autocomplete="username" required autofocus>
+      </label>
+      <label>Κωδικός πρόσβασης
+        <input name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn primary big" type="submit">Σύνδεση</button>
+    </form>
+    <p class="hint">Δοκιμαστικοί λογαριασμοί: owner / owner123 · reception / reception123 · mechanic / mechanic123</p>
+  </section>
+</div>
+{% endblock %}

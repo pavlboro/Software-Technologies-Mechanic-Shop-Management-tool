@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Πελάτες{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Πελάτες</h1>
+  <a class="btn" href="{{ url_for('customers') }}">Νέος πελάτης</a>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>{{ 'Επεξεργασία πελάτη' if edit_customer else 'Καταχώριση πελάτη' }}</h2>
+    <form method="post" action="{{ url_for('customers_save') }}" class="form">
+      <input type="hidden" name="customer_id" value="{{ edit_customer['id'] if edit_customer else '' }}">
+      <label>Ονοματεπώνυμο / Επωνυμία<input name="name" required
+        value="{{ edit_customer['name'] if edit_customer else '' }}"></label>
+      <label>ΑΦΜ<input name="vat" value="{{ edit_customer['vat'] if edit_customer else '' }}"></label>
+      <label>Τηλέφωνο<input name="phone" value="{{ edit_customer['phone'] if edit_customer else '' }}"></label>
+      <label>E-mail<input name="email" type="email"
+        value="{{ edit_customer['email'] if edit_customer else '' }}"></label>
+      <label>Διεύθυνση<input name="address" value="{{ edit_customer['address'] if edit_customer else '' }}"></label>
+      <button class="btn primary" type="submit">Αποθήκευση</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Όλοι οι πελάτες</h2>
+    <table>
+      <thead><tr><th>Ονοματεπώνυμο</th><th>ΑΦΜ</th><th>Τηλέφωνο</th><th></th></tr></thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td><a href="{{ url_for('customer_detail', cid=c['id']) }}">{{ c['name'] }}</a></td>
+          <td class="mono">{{ c['vat'] }}</td>
+          <td class="mono">{{ c['phone'] }}</td>
+          <td class="actions"><a class="link" href="{{ url_for('customers', edit=c['id']) }}">Επεξεργασία</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">Δεν υπάρχουν πελάτες ακόμη.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

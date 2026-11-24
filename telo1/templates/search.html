@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Αναζήτηση{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Αναζήτηση &amp; προβολή αποτελεσμάτων</h1>
+  <button class="btn" type="button" onclick="window.print()">Εκτύπωση</button>
+</div>
+
+<section class="card no-print">
+  <h2>Συνδυαστική αναζήτηση</h2>
+  <form method="get" class="form grid-form">
+    <label>Αρ. Κυκλοφορίας<input name="plate" value="{{ filters['plate'] }}"></label>
+    <label>VIN<input name="vin" value="{{ filters['vin'] }}"></label>
+    <label>ΑΦΜ<input name="vat" value="{{ filters['vat'] }}"></label>
+    <label>Ονοματεπώνυμο<input name="name" value="{{ filters['name'] }}"></label>
+    <label>Μάρκα / Μοντέλο<input name="model" value="{{ filters['model'] }}"></label>
+    <label>Εργασία<input name="work" value="{{ filters['work'] }}"></label>
+    <label>Ανταλλακτικό<input name="part" value="{{ filters['part'] }}"></label>
+    <label>Μηχανικός<input name="mechanic" value="{{ filters['mechanic'] }}"></label>
+    <label>Από ημερομηνία<input type="date" name="date_from" value="{{ filters['date_from'] }}"></label>
+    <label>Έως ημερομηνία<input type="date" name="date_to" value="{{ filters['date_to'] }}"></label>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Αναζήτηση</button>
+      <a class="btn" href="{{ url_for('search') }}">Καθαρισμός</a>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Αποτελέσματα ({{ results|length }})</h2>
+  <table>
+    <thead>
+      <tr><th>Δελτίο</th><th>Ημερομηνία</th><th>Πινακίδα</th><th>Όχημα</th>
+          <th>Πελάτης</th><th>Εργασία</th><th>Κατάσταση</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for r in results %}
+      <tr>
+        <td class="mono">#{{ r['id'] }}</td>
+        <td class="mono">{{ r['opened_date'] }}</td>
+        <td class="mono">{{ r['plate'] }}</td>
+        <td>{{ r['make'] }} {{ r['model'] }}</td>
+        <td>{{ r['customer_name'] }}</td>
+        <td class="clamp">{{ r['description'] }}</td>
+        <td><span class="badge {{ r['status'] }}">{{ statuses[r['status']] }}</span></td>
+        <td class="no-print"><a class="link" href="{{ url_for('ticket_view', tid=r['id']) }}">Άνοιγμα</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="muted">Δεν βρέθηκαν αποτελέσματα για τα κριτήρια που δώσατε.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

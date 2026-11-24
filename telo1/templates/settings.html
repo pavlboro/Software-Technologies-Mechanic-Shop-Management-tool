@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Ρυθμίσεις{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Ρυθμίσεις</h1>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Χρήστες</h2>
+    <table>
+      <thead><tr><th>Χρήστης</th><th>Ονοματεπώνυμο</th><th>Ρόλος</th><th></th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="mono">{{ u['username'] }}</td>
+          <td>{{ u['full_name'] }}</td>
+          <td><span class="badge role">{{ roles[u['role']] }}</span></td>
+          <td class="actions">
+            <form method="post" action="{{ url_for('settings_users') }}" class="inline">
+              <input type="hidden" name="action" value="password">
+              <input type="hidden" name="user_id" value="{{ u['id'] }}">
+              <input name="password" type="password" placeholder="Νέος κωδικός" class="short">
+              <button class="link" type="submit">Αλλαγή</button>
+            </form>
+            {% if u['id'] != user['id'] %}
+            <form method="post" action="{{ url_for('settings_users') }}" class="inline">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="user_id" value="{{ u['id'] }}">
+              <button class="link danger" type="submit">Διαγραφή</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Νέος χρήστης</h3>
+    <form method="post" action="{{ url_for('settings_users') }}" class="form grid-form">
+      <input type="hidden" name="action" value="create">
+      <label>Όνομα χρήστη<input name="username" required></label>
+      <label>Ονοματεπώνυμο<input name="full_name"></label>
+      <label>Κωδικός<input type="password" name="password" minlength="6" required></label>
+      <label>Ρόλος
+        <select name="role">
+          {% for key, label in roles.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+        </select>
+      </label>
+      <div class="form-actions"><button class="btn primary" type="submit">Δημιουργία</button></div>
+    </form>
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Χρέωση εργασίας</h2>
+      <form method="post" action="{{ url_for('settings_rate') }}" class="form inline">
+        <input type="number" step="0.5" name="hourly_rate" value="{{ rate }}" class="short">
+        <span>€ / ώρα</span>
+        <button class="btn primary" type="submit">Αποθήκευση</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Έτοιμες εργασίες</h2>
+      {% for tpl in tpls %}
+      <form method="post" action="{{ url_for('settings_templates') }}" class="form">
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="template_id" value="{{ tpl['id'] }}">
+        <label>Όνομα<input name="name" value="{{ tpl['name'] }}"></label>
+        <label>Εργασίες<textarea name="items" rows="3">{{ tpl['items'] }}</textarea></label>
+        <div class="form-actions">
+          <button class="btn" type="submit">Ενημέρωση</button>
+        </div>
+      </form>
+      <form method="post" action="{{ url_for('settings_templates') }}">
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="template_id" value="{{ tpl['id'] }}">
+        <button class="link danger" type="submit">Διαγραφή</button>
+      </form>
+      <hr>
+      {% endfor %}
+
+      <h3>Νέα εργασία</h3>
+      <form method="post" action="{{ url_for('settings_templates') }}" class="form">
+        <input type="hidden" name="action" value="create">
+        <label>Όνομα<input name="name" required></label>
+        <label>Εργασίες<textarea name="items" rows="3"></textarea></label>
+        <button class="btn primary" type="submit">Δημιουργία</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>E-mail στους πελάτες</h2>
+      <form method="post" action="{{ url_for('settings_mail') }}" class="form grid-form">
+        <label>Διακομιστής<input name="smtp_host" value="{{ mail['smtp_host'] }}" placeholder="smtp.gmail.com"></label>
+        <label>Θύρα<input name="smtp_port" value="{{ mail['smtp_port'] }}" placeholder="587"></label>
+        <label>Χρήστης<input name="smtp_user" value="{{ mail['smtp_user'] }}"></label>
+        <label>Κωδικός<input type="password" name="smtp_pass" value="{{ mail['smtp_pass'] }}"></label>
+        <label>Αποστολέας<input name="smtp_from" value="{{ mail['smtp_from'] }}"></label>
+        <div class="form-actions"><button class="btn primary" type="submit">Αποθήκευση</button></div>
+      </form>
+      <form method="post" action="{{ url_for('settings_test_mail') }}" class="form inline">
+        <input name="to" type="email" placeholder="Δοκιμαστικό e-mail" class="short">
+        <button class="btn" type="submit">Δοκιμή</button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

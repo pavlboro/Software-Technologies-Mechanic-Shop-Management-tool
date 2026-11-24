@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Συνεργείο Auto{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('dashboard') }}">ΣΥΝΕΡΓΕΙΟ<span>AUTO</span></a>
+    {% if user %}
+    <nav class="mainnav">
+      <a href="{{ url_for('dashboard') }}">Δελτία</a>
+      <a href="{{ url_for('search') }}">Αναζήτηση</a>
+      {% if user['role'] in ['owner', 'reception'] %}
+      <a href="{{ url_for('customers') }}">Πελάτες</a>
+      <a href="{{ url_for('parts') }}">Ανταλλακτικά</a>
+      {% endif %}
+      {% if user['role'] == 'owner' %}
+      <a href="{{ url_for('settings') }}">Ρυθμίσεις</a>
+      {% endif %}
+    </nav>
+    <div class="whoami">
+      <strong>{{ user['full_name'] }}</strong>
+      <span>{{ roles[user['role']] }}</span>
+      <a href="{{ url_for('logout') }}">Έξοδος</a>
+    </div>
+    {% endif %}
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

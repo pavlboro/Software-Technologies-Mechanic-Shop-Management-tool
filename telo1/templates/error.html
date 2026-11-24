@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Σφάλμα {{ code }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>{{ code }}</h1>
+  <p>{{ message }}</p>
+  <a class="btn primary" href="{{ url_for('dashboard') }}">Επιστροφή στον πίνακα ελέγχου</a>
+</section>
+{% endblock %}

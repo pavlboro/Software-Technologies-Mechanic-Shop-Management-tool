@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Ανταλλακτικά{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Ανταλλακτικά</h1>
+  <a class="btn" href="{{ url_for('parts') }}">Νέο ανταλλακτικό</a>
+</div>
+
+<div class="grid-2 wide-left">
+  <section class="card">
+    <h2>Κατάλογος ({{ parts|length }})</h2>
+    <table>
+      <thead><tr><th>Κωδικός</th><th>Περιγραφή</th><th>Κατασκευαστής</th>
+                 <th>Συμβατά μοντέλα</th><th>Τιμή</th><th>Απόθεμα</th><th></th></tr></thead>
+      <tbody>
+        {% for p in parts %}
+        <tr>
+          <td class="mono">{{ p['code'] }}</td>
+          <td>{{ p['description'] }}</td>
+          <td>{{ p['manufacturer'] }}</td>
+          <td>{{ p['compatible'] }}</td>
+          <td class="mono">{{ '%.2f'|format(p['price']) }} €</td>
+          <td class="mono {{ 'warn' if p['stock'] < 3 }}">{{ p['stock'] }}</td>
+          <td class="actions"><a class="link" href="{{ url_for('parts', edit=p['id']) }}">Επεξεργασία</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted">Ο κατάλογος είναι κενός.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <h2>{{ 'Επεξεργασία ανταλλακτικού' if edit_part else 'Προσθήκη ανταλλακτικού' }}</h2>
+      <form method="post" action="{{ url_for('parts_save') }}" class="form">
+        <input type="hidden" name="part_id" value="{{ edit_part['id'] if edit_part else '' }}">
+        <label>Κωδικός<input name="code" required value="{{ edit_part['code'] if edit_part else '' }}"></label>
+        <label>Περιγραφή<input name="description" value="{{ edit_part['description'] if edit_part else '' }}"></label>
+        <label>Κατασκευαστής<input name="manufacturer" value="{{ edit_part['manufacturer'] if edit_part else '' }}"></label>
+        <label>Συμβατά μοντέλα<input name="compatible" value="{{ edit_part['compatible'] if edit_part else '' }}"></label>
+        <label>Τιμή (€)<input type="number" step="0.01" name="price" value="{{ edit_part['price'] if edit_part else '' }}"></label>
+        <label>Απόθεμα<input type="number" name="stock" value="{{ edit_part['stock'] if edit_part else 0 }}"></label>
+        <button class="btn primary" type="submit">Αποθήκευση</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Ενημέρωση με αρχείο CSV</h2>
+      <p class="muted">Στήλες: code;description;manufacturer;compatible;price;stock (έως 20MB).
+        Όσα υπάρχουν ενημερώνονται, όσα λείπουν προστίθενται.</p>
+      <form method="post" action="{{ url_for('parts_import') }}" class="form" enctype="multipart/form-data">
+        <label>Αρχείο CSV<input type="file" name="csv_file" accept=".csv,text/csv" required></label>
+        <button class="btn" type="submit">Εισαγωγή</button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}
